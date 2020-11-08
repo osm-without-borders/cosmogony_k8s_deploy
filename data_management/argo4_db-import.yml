@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: argo4-db-import-wft
+  namespace: cosmogony
+spec:
+  entrypoint: get-cosmo
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  templates:
+  - name: get-cosmo
+    steps:
+    - - name: getcosmo
+        template: getcosmo
+    - - name: cosmogony-import
+        template: import-cosmogony
+        arguments:
+          artifacts:
+          - name: cosmogony-source
+            from: "{{steps.getcosmo.outputs.artifacts.cosmogony-output}}"
+    - - name: db-publish
+        template: publish-cosmogony
+  - name: getcosmo
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      source: |
+        echo "start of script"
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        mc cp myminio/cosmogony/cosmogony-data/concat/cosmogony.jsonl.gz cosmogony.jsonl.gz
+        # mc cp myminio/cosmogony/cosmogony-data/france-latest.osm.pbf.jsonl.gz cosmogony.jsonl.gz
+        echo "Finished"
+    outputs:
+      artifacts:
+      - name: cosmogony-output
+        path: /cosmogony.jsonl.gz
+  - name: import-cosmogony
+    inputs:
+      artifacts:
+      - name: cosmogony-source
+        path: /mnt/data/cosmogony.jsonl.gz
+    container:
+      image: my-local-registry.url/namespace/cosmogony_explorer_importer
+      imagePullPolicy: Always
+      command: ["python"]
+      args: ["import.py", "import-data", "/mnt/data/cosmogony.jsonl.gz", "true"]
+      env:
+      - name: POSTGRES_HOST
+        value: postgres-postgresql.default
+      - name: POSTGRES_PORT
+        value: "5432"
+      - name: POSTGRES_DB
+        value: cosmogony
+      - name: POSTGRES_USER
+        value: cosmogony
+      - name: POSTGRES_PASSWORD
+        value: cosmogony
+  - name: publish-cosmogony
+    container:
+      image: my-local-registry.url/namespace/cosmogony_explorer_importer
+      imagePullPolicy: IfNotPresent
+      command: ["python"]
+      args: ["import.py", "publish"]
+      env:
+      - name: POSTGRES_HOST
+        value: postgres-postgresql.default
+      - name: POSTGRES_PORT
+        value: "5432"
+      - name: POSTGRES_DB
+        value: cosmogony
+      - name: POSTGRES_USER
+        value: cosmogony
+      - name: POSTGRES_PASSWORD
+        value: cosmogony
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: argo4-db-import-wf
+  namespace: cosmogony
+spec:
+  workflowTemplateRef:
+    name: argo4-db-import-wft
+

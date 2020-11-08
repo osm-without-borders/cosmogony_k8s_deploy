@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: argo6-update-tiles
+  namespace: cosmogony
+spec:
+  entrypoint: update-tiles
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  templates:
+  - name: update-tiles
+    steps:
+    - - name: empty-tmp
+        template: empty-tmp-tpl
+    - - name: generate-tiles
+        template: generate-tiles-tpl
+  - name: empty-tmp-tpl
+    volumes:
+    - name: tiles-vol
+      persistentVolumeClaim:
+        claimName: trex-pvc
+    script:
+      image: alpine:3.6
+      volumeMounts:
+        - mountPath: /mnt/trex
+          name: tiles-vol
+      command: ["/bin/sh"]
+      source: |
+        rm -rf /mnt/trex/preparing
+        mkdir /mnt/trex/preparing
+        rm -rf /mnt/trex/mvtcache
+        mkdir /mnt/trex/mvtcache
+  - name: generate-tiles-tpl
+    volumes:
+    - name: tiles-vol
+      persistentVolumeClaim:
+        claimName: trex-pvc
+    container:
+      image: my-local-registry.url/namespace/cosmogony_explorer_tiles
+      command: ["/usr/bin/t_rex"]
+      args: ["generate", "--minzoom", "0", "--maxzoom", "1", "--config", "/config_server.toml"]
+      volumeMounts:
+        - mountPath: /tmp
+          name: tiles-vol
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: argo6-update-tiles-wf
+  namespace: cosmogony
+spec:
+  workflowTemplateRef:
+    name: argo6-update-tiles

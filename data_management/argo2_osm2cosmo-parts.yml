@@ -1,0 +1,155 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: argo2-osm2cosmo-parts-wft
+  namespace: cosmogony
+spec:
+  entrypoint: loop-param-arg-example
+  synchronization:
+    semaphore:
+      configMapKeyRef:
+        name: argo-limiter
+        key: workflow
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  templates:
+  - name: loop-param-arg-example
+    steps:
+    - - name: generate-todo-list
+        template: generate-todo-template
+    - - name: task-generator
+        template: task-generator-template
+        arguments:
+          parameters:
+          - name: file
+            value: "{{item}}"
+        withParam: "{{steps.generate-todo-list.outputs.result}}"
+  - name: generate-todo-template
+    volumes:
+    - name: sources-vol
+      configMap:
+        name: osm-sources
+    script:
+      image: alpine:3.6
+      volumeMounts:
+        - mountPath: /mnt/osm-sources
+          name: sources-vol
+      command: ["/bin/sh"]
+      source: |
+        echo "["
+        first=true
+        for myfile in $(cat /mnt/osm-sources/step2-cosmogony-convert)
+        do
+          filename="${myfile##*/}"
+          if $first
+          then
+          # echo "{\"file\": \"${filename}\"}"
+            echo "\"${filename}\""
+          else
+            echo ","
+            # echo ",{\"file\": \"${filename}\"}"
+            echo "\"${filename}\""
+          fi
+          first=false
+        done;
+        echo "]"
+  - name: task-generator-template
+    synchronization:
+      semaphore:
+        configMapKeyRef:
+          name: argo-limiter
+          key: template
+    inputs:
+      parameters:
+      - name: file
+    steps:
+    - - name: substep1
+        template: step1
+        arguments:
+          parameters:
+          - name: file
+            value: "{{inputs.parameters.file}}"
+    - - name: substep2
+        template: step2
+        arguments:
+          parameters:
+          - name: file
+            value: "{{inputs.parameters.file}}"
+          artifacts:
+          - name: osm-source
+            from: "{{steps.substep1.outputs.artifacts.osm-file}}"
+    - - name: substep3
+        template: step3
+        arguments:
+          parameters:
+          - name: file
+            value: "{{inputs.parameters.file}}"
+          artifacts:
+          - name: cosmo-file
+            from: "{{steps.substep2.outputs.artifacts.cosmo-file}}"
+  - name: step1
+    inputs:
+      parameters:
+      - name: file
+    outputs:
+      artifacts:
+      - name: osm-file
+        path: /osm.pbf
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      source: |
+        file={{inputs.parameters.file}}
+        echo "Processing ${file}"
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        filename="${file##*/}"
+        echo "Getting $filename.jsonl.gz from minio"
+        mc cp myminio/cosmogony/osm/$filename osm.pbf
+        echo "Finished"
+  - name: step2
+    inputs:
+      artifacts:
+      - name: osm-source
+        path: /osm.pbf
+      parameters:
+      - name: file
+    outputs:
+      artifacts:
+      - name: cosmo-file
+        path: /cosmo.jsonl.gz
+    script:
+      image: osmwithoutborders/cosmogony
+      command: ["/bin/sh"]
+      source: |
+        cosmogony --input /osm.pbf --output /cosmo.jsonl.gz --filter-langs fr --filter-langs en
+  - name: step3
+    inputs:
+      artifacts:
+      - name: cosmo-file
+        path: /cosmo.jsonl.gz
+      parameters:
+      - name: file
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      source: |
+        file={{inputs.parameters.file}}
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        filename="${file##*/}"
+        echo "Saving $filename.jsonl.gz to minio"
+        mc cp cosmo.jsonl.gz myminio/cosmogony/cosmogony-data/$filename.jsonl.gz
+        echo "Finished"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: argo2-osm2cosmo-parts-wf
+  namespace: cosmogony
+spec:
+  workflowTemplateRef:
+    name: argo2-osm2cosmo-parts-wft
+

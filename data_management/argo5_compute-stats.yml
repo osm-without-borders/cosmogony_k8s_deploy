@@ -1,0 +1,102 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: argo5-compute-stats-wft
+  namespace: cosmogony
+spec:
+  entrypoint: get-cosmo
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  templates:
+  - name: get-cosmo
+    steps:
+    - - name: getcosmo
+        template: getcosmo
+    - - name: generate-metrics
+        template: cosmogony-metrics
+        arguments:
+          artifacts:
+          - name: cosmogony-source
+            from: "{{steps.getcosmo.outputs.artifacts.cosmogony-output}}"
+    - - name: push-to-minio
+        template: miniopush
+        arguments:
+          artifacts:
+          - name: stats-file
+            from: "{{steps.generate-metrics.outputs.artifacts.cosmogony-stats}}"
+    - - name: publish-to-front
+        template: publish
+        arguments:
+          artifacts:
+          - name: stats-file
+            from: "{{steps.generate-metrics.outputs.artifacts.cosmogony-stats}}"
+  - name: getcosmo
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      source: |
+        echo "start of script"
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        mc cp myminio/cosmogony/cosmogony-data/concat/cosmogony.jsonl.gz cosmogony.jsonl.gz
+        echo "Finished"
+    outputs:
+      artifacts:
+      - name: cosmogony-output
+        path: /cosmogony.jsonl.gz
+  - name: cosmogony-metrics
+    inputs:
+      artifacts:
+      - name: cosmogony-source
+        path: /mnt/data/cosmogony.jsonl.gz
+    container:
+      image: osmwithoutborders/cosmogony-data-dashboard
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh"]
+      args: ["-c", "py.test --cosmogony=/mnt/data/cosmogony.jsonl.gz --output=/test_results.json || exit 0"]
+    outputs:
+      artifacts:
+      - name: cosmogony-stats
+        path: /test_results.json
+  - name: miniopush
+    inputs:
+      artifacts:
+      - name: stats-file
+        path: /tests_results.json
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      source: |
+        echo "start of script"
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        mc cp tests_results.json myminio/cosmogony/cosmogony-data/concat/tests_results.json
+        echo "Finished"
+  - name: publish
+    inputs:
+      artifacts:
+      - name: stats-file
+        path: /tests_results.json
+    container:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      args: ["-c", "cp /tests_results.json /mnt/data-dashboard/test_results.json"]
+      volumeMounts:
+        - mountPath: /mnt/data-dashboard
+          name: cosmov
+    volumes:
+      - name: cosmov
+        persistentVolumeClaim:
+          claimName: cosmogony-pvc
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: argo5-compute-stats-wf
+  namespace: cosmogony
+spec:
+  workflowTemplateRef:
+    name: argo5-compute-stats-wft
+

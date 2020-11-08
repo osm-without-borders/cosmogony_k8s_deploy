@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosmogony-trex
+  namespace: cosmogony
+  labels:
+    app: cosmogony-trex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosmogony-trex
+  template:
+    metadata:
+      labels:
+        app: cosmogony-trex
+    spec:
+      containers:
+      - name: cosmogony-trex
+        image: my-local-registry.url/namespace/cosmogony_explorer_tiles
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cosmogony-trex
+  namespace: cosmogony
+  labels:
+    app: cosmogony-trex
+spec:
+  type: NodePort
+  ports:
+  - port: 6767
+    targetPort: 6767
+  selector:
+    app: cosmogony-trex

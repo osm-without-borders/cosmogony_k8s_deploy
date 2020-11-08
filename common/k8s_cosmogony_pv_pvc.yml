@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cosmogony-pv
+  namespace: default
+  labels:
+    type: local
+    app: cosmogony
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  persistentVolumeReclaimPolicy: Recycle
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/var/data/cosmogony"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: cosmogony-pvc
+  namespace: cosmogony
+  labels:
+    app: cosmogony
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  selector:
+    matchLabels:
+      app: cosmogony
+  resources:
+    requests:
+        storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: trex-pv
+  namespace: default
+  labels:
+    type: local
+    app: cosmogony-trex
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  persistentVolumeReclaimPolicy: Recycle
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/var/data/cosmogony-trex"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: trex-pvc
+  namespace: cosmogony
+  labels:
+    app: cosmogony
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  selector:
+    matchLabels:
+      app: cosmogony-trex
+  resources:
+    requests:
+        storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: trex-published-pv
+  namespace: default
+  labels:
+    type: local
+    app: cosmogony-trex-published
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  persistentVolumeReclaimPolicy: Recycle
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/var/data/cosmogony-trex/published"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: trex-published-pvc
+  namespace: cosmogony
+  labels:
+    app: cosmogony
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  selector:
+    matchLabels:
+      app: cosmogony-trex-published
+  resources:
+    requests:
+        storage: 1Gi
+

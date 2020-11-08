@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: argo3-cosmo-aggregate-wft
+  namespace: cosmogony
+spec:
+  entrypoint: cat-cosmo
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  templates:
+  - name: cat-cosmo
+    steps:
+    - - name: cosmocat
+        template: cosmo-cat
+  - name: cosmo-cat
+    volumes:
+    - name: sources-vol
+      configMap:
+        name: osm-sources
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      volumeMounts:
+        - mountPath: /mnt/osm-sources
+          name: sources-vol
+      source: |
+        echo "start of script"
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        for myfile in $(cat /mnt/osm-sources/step3-cosmogony-concat)
+        do
+          filename="${myfile##*/}"
+        done;
+        echo "Getting $filename.jsonl.gz from minio"
+        mc cp myminio/cosmogony/cosmogony-data/${filename}.jsonl.gz $filename.jsonl.gz
+        echo "Pushing file to minio"
+        mc cp $filename.jsonl.gz myminio/cosmogony/cosmogony-data/concat/cosmogony.jsonl.gz
+        echo "Finished"
+  - name: cosmo-cat-merge-bug
+    volumes:
+    - name: sources-vol
+      configMap:
+        name: osm-sources
+    script:
+      image: minio/mc:latest
+      command: ["/bin/sh"]
+      volumeMounts:
+        - mountPath: /mnt/osm-sources
+          name: sources-vol
+      source: |
+        echo "start of script"
+        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        cd /
+        for myfile in $(cat /mnt/osm-sources/step3-cosmogony-concat)
+        do
+          filename="${myfile##*/}"
+          echo "Getting $filename.jsonl.gz from minio"
+          mc cp myminio/cosmogony/cosmogony-data/${filename}.jsonl.gz $filename.jsonl.gz
+        done;
+        echo "concat files"
+        gzip -d -c *.jsonl.gz > /tmp/concat_raw.jsonl
+        # cosmogony objects contains an "id" property corresponding to index in file
+        # it needs to be recalculated
+        nl -w1 /tmp/concat_raw.jsonl |sed -e 's/^\([0-9]*\)\s{"id":[0-9]*/{"id":\1/' > /tmp/concat.jsonl
+        gzip /tmp/concat.jsonl
+        echo "Pushing concat.jsonl.gz to minio"
+        mc cp /tmp/concat.jsonl.gz myminio/cosmogony/cosmogony-data/concat/cosmogony.jsonl.gz
+        echo "Finished"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: argo3-cosmo-aggregate-wf
+  namespace: cosmogony
+spec:
+  workflowTemplateRef:
+    name: argo3-cosmo-aggregate-wft
+

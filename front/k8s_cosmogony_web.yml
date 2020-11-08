@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosmogony-web
+  namespace: cosmogony
+  labels:
+    app: cosmogony-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosmogony-web
+  template:
+    metadata:
+      labels:
+        app: cosmogony-web
+    spec:
+      containers:
+      - name: cosmogony-web
+        image: my-local-registry.url/namespace/cosmogony_explorer_web
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: /mnt/data_dashboard
+            name: cosmov
+      volumes:
+        - name: cosmov
+          persistentVolumeClaim:
+            claimName: cosmogony-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cosmogony-web
+  namespace: cosmogony
+  labels:
+    app: cosmogony-web
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: cosmogony-web

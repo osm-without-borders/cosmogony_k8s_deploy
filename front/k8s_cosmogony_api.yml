@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosmogony-api
+  namespace: cosmogony
+  labels:
+    app: cosmogony-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosmogony-api
+  template:
+    metadata:
+      labels:
+        app: cosmogony-api
+    spec:
+      containers:
+      - name: cosmogony-api
+        image: my-local-registry.url/namespace/cosmogony_explorer_api
+        imagePullPolicy: Always
+        env:
+        - name: POSTGRES_HOST
+          value: postgres-postgresql.default
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          value: cosmogony
+        - name: POSTGRES_USER
+          value: cosmogony
+        - name: POSTGRES_PASSWORD
+          value: cosmogony
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cosmogony-api
+  namespace: cosmogony
+  labels:
+    app: cosmogony-api
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: cosmogony-api

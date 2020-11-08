@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cosmogony
+  namespace: cosmogony
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Access-Control-Allow-Origin: *";
+spec:
+  rules:
+  - host: cosmogony.world
+    http:
+      paths:
+      - backend:
+          serviceName: cosmogony-web
+          servicePort: 80
+        path: /
+  - host: beta.cosmogony.world
+    http:
+      paths:
+      - backend:
+          serviceName: cosmogony-web
+          servicePort: 80
+        path: /
+  - host: poc-osm.navitia.io
+    http:
+      paths:
+      - backend:
+          serviceName: cosmogony-web
+          servicePort: 80
+        path: /
