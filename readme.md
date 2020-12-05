@@ -41,7 +41,7 @@ This folder contains objets used in both Data processing and Frontend parts.
 Basic installation procedure (to be improved)
 1. Edit Makefile to specify your local docker images repository
 2. Build images using the several commands in the Makefile (run `make` to display them)
-3. Edit the `yml` files conaining `my-local-registry.url` to provide your docker repository
+3. Edit the `cosmo_chart/values.yaml` file conaining `my-local-registry.url` to provide your docker repository
 4. Send all the `yml` files to your kubernetes cluster
 
 

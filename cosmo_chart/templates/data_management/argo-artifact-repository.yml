@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cosmogony-artifact-repository
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
 data:
   minio: |
     s3:

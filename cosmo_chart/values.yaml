@@ -1,0 +1,56 @@
+# Default values for cosmo_chart.
+
+cosmogony:
+  image:
+    repository: osmwithoutborders/cosmogony
+    pullPolicy: IfNotPresent
+cosmogony_explorer_importer:
+  image:
+    repository: my-local-registry.url/namespace/cosmogony_explorer_importer
+    pullPolicy: Always
+cosmogony_explorer_tiles:
+  image:
+    repository: my-local-registry.url/namespace/cosmogony_explorer_tiles
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+cosmogony_explorer_web:
+  image:
+    repository: my-local-registry.url/namespace/cosmogony_explorer_web
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+cosmogony_explorer_api:
+  image:
+    repository: my-local-registry.url/namespace/cosmogony_explorer_api
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+
+namespace: cosmogony
+
+persistantVolumes:
+  stats: /var/data/cosmogony
+  tilesCache: /var/data/cosmogony-trex
+
+minio:
+  host: http://minio.default.svc.cluster.local:9000
+  accessKey: minioaccess
+  secretKey: miniosecret
+  cosmogonyPath: /cosmogony
+
+postgres:
+  host: postgres-postgresql.default
+  post: 5432
+  user: cosmogony
+  password: cosmogony
+  db: cosmogony
+
+ingress:
+  enabled: false
+  hosts:
+    - host: cosmogony.local
+
+nodeSelector: {}
+
+

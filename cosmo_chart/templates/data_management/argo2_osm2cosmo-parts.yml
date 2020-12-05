@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: argo2-osm2cosmo-parts-wft
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
 spec:
   entrypoint: loop-param-arg-example
   synchronization:
@@ -102,11 +102,11 @@ spec:
       source: |
         file={{inputs.parameters.file}}
         echo "Processing ${file}"
-        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
         filename="${file##*/}"
         echo "Getting $filename.jsonl.gz from minio"
-        mc cp myminio/cosmogony/osm/$filename osm.pbf
+        mc cp myminio{{ .Values.minio.cosmogonyPath }}/osm/$filename osm.pbf
         echo "Finished"
   - name: step2
     inputs:
@@ -120,7 +120,8 @@ spec:
       - name: cosmo-file
         path: /cosmo.jsonl.gz
     script:
-      image: osmwithoutborders/cosmogony
+      image: {{ .Values.cosmogony.image.repository }}
+      imagePullPolicy: {{ .Values.cosmogony.image.pullPolicy}}
       command: ["/bin/sh"]
       source: |
         cosmogony --input /osm.pbf --output /cosmo.jsonl.gz --filter-langs fr --filter-langs en
@@ -136,20 +137,10 @@ spec:
       command: ["/bin/sh"]
       source: |
         file={{inputs.parameters.file}}
-        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
         filename="${file##*/}"
         echo "Saving $filename.jsonl.gz to minio"
-        mc cp cosmo.jsonl.gz myminio/cosmogony/cosmogony-data/$filename.jsonl.gz
+        mc cp cosmo.jsonl.gz myminio{{ .Values.minio.cosmogonyPath }}/cosmogony-data/$filename.jsonl.gz
         echo "Finished"
-
----
-apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-metadata:
-  name: argo2-osm2cosmo-parts-wf
-  namespace: cosmogony
-spec:
-  workflowTemplateRef:
-    name: argo2-osm2cosmo-parts-wft
 

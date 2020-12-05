@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: osm-sources
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
 data:
   step1-osm-dl: |
     http://download.geofabrik.de/europe-latest.osm.pbf

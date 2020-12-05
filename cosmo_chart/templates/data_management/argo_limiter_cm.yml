@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: argo-limiter
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
 data:
   workflow: "1"  # Only one workflow can run at given time in particular namespace
   template: "1"  # Two instance of template can run at a given time in particular namespace
