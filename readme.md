@@ -14,6 +14,20 @@ Installation of those components are not included in this repo.
 
 A local Docker Registry is requested for the time being to store the web part images. This should be configure in the `./Makefile` file.
 
+## Installing this chart
+First, you need to build the images and push them to your local registry (part of the images are not pre-built on DockerHub):
+- Edit the `Makefile` to setup your registry location
+- Run `make init` to checkout github submodules
+- Run `make build_importer`
+- Run `make build_api`
+- Run `make build_web`
+- Run `make build_trex`
+
+Next install everything using the helm chart:
+- `cp ./cosmo_chart/values.yaml ./myvals.yaml`
+- edit the file `myvals.yaml`
+- run `helm upgrade --install -f myvals.yaml cosmogony-dev ./cosmo_chart`
+
 ## Desciption of the parts
 
 ### Data processing

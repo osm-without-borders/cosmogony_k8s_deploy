@@ -23,8 +23,8 @@ spec:
         arguments:
           parameters:
           - name: file
-            value: "{{item}}"
-        withParam: "{{steps.generate-todo-list.outputs.result}}"
+            value: "{{ "{{" }}item{{ "}}" }}"
+        withParam: "{{ "{{" }}steps.generate-todo-list.outputs.result{{ "}}" }}"
   - name: generate-todo-template
     volumes:
     - name: sources-vol
@@ -69,25 +69,25 @@ spec:
         arguments:
           parameters:
           - name: file
-            value: "{{inputs.parameters.file}}"
+            value: "{{ "{{" }}inputs.parameters.file{{ "}}" }}"
     - - name: substep2
         template: step2
         arguments:
           parameters:
           - name: file
-            value: "{{inputs.parameters.file}}"
+            value: "{{ "{{" }}inputs.parameters.file{{ "}}" }}"
           artifacts:
           - name: osm-source
-            from: "{{steps.substep1.outputs.artifacts.osm-file}}"
+            from: "{{ "{{" }}steps.substep1.outputs.artifacts.osm-file{{ "}}" }}"
     - - name: substep3
         template: step3
         arguments:
           parameters:
           - name: file
-            value: "{{inputs.parameters.file}}"
+            value: "{{ "{{" }}inputs.parameters.file{{ "}}" }}"
           artifacts:
           - name: cosmo-file
-            from: "{{steps.substep2.outputs.artifacts.cosmo-file}}"
+            from: "{{ "{{" }}steps.substep2.outputs.artifacts.cosmo-file{{ "}}" }}"
   - name: step1
     inputs:
       parameters:
@@ -100,7 +100,7 @@ spec:
       image: minio/mc:latest
       command: ["/bin/sh"]
       source: |
-        file={{inputs.parameters.file}}
+        file={{ "{{" }}inputs.parameters.file{{ "}}" }}
         echo "Processing ${file}"
         /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
@@ -136,7 +136,7 @@ spec:
       image: minio/mc:latest
       command: ["/bin/sh"]
       source: |
-        file={{inputs.parameters.file}}
+        file={{ "{{" }}inputs.parameters.file{{ "}}" }}
         /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
         filename="${file##*/}"

@@ -1,0 +1,4 @@
+[submodule "cosmogony_explorer"]
+	path = cosmogony_explorer
+	url = https://github.com/osm-without-borders/cosmogony_explorer
+	branch = master

@@ -50,6 +50,8 @@ ingress:
   enabled: false
   hosts:
     - host: cosmogony.local
+      serviceName: cosmogony-web
+      servicePort: 80
 
 nodeSelector: {}
 

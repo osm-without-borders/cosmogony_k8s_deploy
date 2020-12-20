@@ -18,19 +18,19 @@ spec:
         arguments:
           artifacts:
           - name: cosmogony-source
-            from: "{{steps.getcosmo.outputs.artifacts.cosmogony-output}}"
+            from: "{{ "{{" }}steps.getcosmo.outputs.artifacts.cosmogony-output{{ "}}" }}"
     - - name: push-to-minio
         template: miniopush
         arguments:
           artifacts:
           - name: stats-file
-            from: "{{steps.generate-metrics.outputs.artifacts.cosmogony-stats}}"
+            from: "{{ "{{" }}steps.generate-metrics.outputs.artifacts.cosmogony-stats{{ "}}" }}"
     - - name: publish-to-front
         template: publish
         arguments:
           artifacts:
           - name: stats-file
-            from: "{{steps.generate-metrics.outputs.artifacts.cosmogony-stats}}"
+            from: "{{ "{{" }}steps.generate-metrics.outputs.artifacts.cosmogony-stats{{ "}}" }}"
   - name: getcosmo
     script:
       image: minio/mc:latest

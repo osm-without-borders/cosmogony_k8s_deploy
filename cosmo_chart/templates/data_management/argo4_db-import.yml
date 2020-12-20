@@ -18,7 +18,7 @@ spec:
         arguments:
           artifacts:
           - name: cosmogony-source
-            from: "{{steps.getcosmo.outputs.artifacts.cosmogony-output}}"
+            from: "{{ "{{" }}steps.getcosmo.outputs.artifacts.cosmogony-output{{ "}}" }}"
     - - name: db-publish
         template: publish-cosmogony
   - name: getcosmo

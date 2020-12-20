@@ -1,3 +1,4 @@
+{{- if .Values.ingress.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -9,10 +10,15 @@ metadata:
       more_set_headers "Access-Control-Allow-Origin: *";
 spec:
   rules:
-  - host: {{ .Values.ingress.hosts.host }}
-    http:
-      paths:
-      - backend:
-          serviceName: cosmogony-web
-          servicePort: 80
-        path: /
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            backend:
+              serviceName: {{ .serviceName }}
+              servicePort: {{ .servicePort }}
+          {{- end }}
+    {{- end }}
+  {{- end }}
