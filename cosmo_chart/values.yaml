@@ -30,8 +30,8 @@ cosmogony_explorer_api:
 namespace: cosmogony
 
 persistantVolumes:
-  stats: /var/data/cosmogony
-  tilesCache: /var/data/cosmogony-trex
+  stats: /var/data/cosmogony/stats
+  tilesCache: /var/data/cosmogony/trex
 
 minio:
   host: http://minio.default.svc.cluster.local:9000
@@ -48,6 +48,7 @@ postgres:
 
 ingress:
   enabled: false
+  class: nginx
   hosts:
     - host: cosmogony.local
       serviceName: cosmogony-web
