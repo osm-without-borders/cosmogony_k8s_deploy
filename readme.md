@@ -5,7 +5,7 @@ on a Kubernetes cluster.
 
 ## Prerequisites
 This installation relies on:
-- A Kuberetes cluster
+- A Kuberetes cluster (version prior to 1.22 because of the Ingress API modification)
 - Argo workflow with version >= 2.9 (because of the use of [Workflow Restrictions](https://argoproj.github.io/argo/workflow-requirements/))
 - Minio for storing OSM data and processed results
 - PostgreSQL
@@ -13,6 +13,9 @@ This installation relies on:
 Installation of those components are not included in this repo.
 
 A local Docker Registry is requested for the time being to store the web part images. This should be configure in the `./Makefile` file.
+
+## Global architecture
+![Global architecture](architecture.png)
 
 ## Installing this chart
 First, you need to build the images and push them to your local registry (part of the images are not pre-built on DockerHub):
@@ -27,6 +30,8 @@ Next install everything using the helm chart:
 - `cp ./cosmo_chart/values.yaml ./myvals.yaml`
 - edit the file `myvals.yaml`
 - run `helm upgrade --install -f myvals.yaml cosmogony-dev ./cosmo_chart`
+
+Be carefull, PersistentVolumes are created as part of the deployment.
 
 ## Desciption of the parts
 
@@ -49,14 +54,6 @@ Note : the web server is also used as a proxy for:
 
 ### Common
 This folder contains objets used in both Data processing and Frontend parts.
-
-## Installation
-
-Basic installation procedure (to be improved)
-1. Edit Makefile to specify your local docker images repository
-2. Build images using the several commands in the Makefile (run `make` to display them)
-3. Edit the `cosmo_chart/values.yaml` file conaining `my-local-registry.url` to provide your docker repository
-4. Send all the `yml` files to your kubernetes cluster
 
 
 ## Todo
