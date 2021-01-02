@@ -5,27 +5,8 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   step1-osm-dl: |
-    http://download.geofabrik.de/europe-latest.osm.pbf
-    http://download.geofabrik.de/africa-latest.osm.pbf
-    http://download.geofabrik.de/antarctica-latest.osm.pbf
-    http://download.geofabrik.de/asia-latest.osm.pbf
-    http://download.geofabrik.de/australia-oceania-latest.osm.pbf
-    http://download.geofabrik.de/central-america-latest.osm.pbf
-    http://download.geofabrik.de/north-america-latest.osm.pbf
-    http://download.geofabrik.de/south-america-latest.osm.pbf
+    {{- range .Values.osmSources }} {{ . | nindent 4 }} {{- end }}
   step2-cosmogony-convert: |
-    http://download.geofabrik.de/europe-latest.osm.pbf
-    http://download.geofabrik.de/africa-latest.osm.pbf
-    http://download.geofabrik.de/antarctica-latest.osm.pbf
-    http://download.geofabrik.de/asia-latest.osm.pbf
-    http://download.geofabrik.de/australia-oceania-latest.osm.pbf
-    http://download.geofabrik.de/central-america-latest.osm.pbf
-    http://download.geofabrik.de/north-america-latest.osm.pbf
-    http://download.geofabrik.de/south-america-latest.osm.pbf
+    {{- range .Values.osmSources }} {{ . | nindent 4 }} {{- end }}
   step3-cosmogony-concat: |
-    http://download.geofabrik.de/europe-latest.osm.pbf
-  deactivated-osm-sources: |
-    http://download.geofabrik.de/europe/france-latest.osm.pbf
-    http://download.geofabrik.de/africa-latest.osm.pbf
-    http://download.geofabrik.de/africa/ivory-coast-latest.osm.pbf
-    http://download.geofabrik.de/africa/ghana-latest.osm.pbf
+    {{- range .Values.osmSources }} {{ . | nindent 4 }} {{- end }}

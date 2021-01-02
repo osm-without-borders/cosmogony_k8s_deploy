@@ -8,7 +8,7 @@ This installation relies on:
 - A Kuberetes cluster (version prior to 1.22 because of the Ingress API modification)
 - Argo workflow with version >= 2.9 (because of the use of [Workflow Restrictions](https://argoproj.github.io/argo/workflow-requirements/))
 - Minio for storing OSM data and processed results
-- PostgreSQL
+- PostgreSQL (you need to create a database with postgis)
 
 Installation of those components are not included in this repo.
 

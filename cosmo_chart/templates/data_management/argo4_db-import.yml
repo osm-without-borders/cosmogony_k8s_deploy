@@ -27,9 +27,9 @@ spec:
       command: ["/bin/sh"]
       source: |
         echo "start of script"
-        /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
+        /usr/bin/mc config host add myminio {{ .Values.minio.scheme }}://{{ .Values.minio.endpoint }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
-        mc cp myminio{{ .Values.minio.cosmogonyPath }}/cosmogony-data/concat/cosmogony.jsonl.gz cosmogony.jsonl.gz
+        mc cp myminio/{{ .Values.minio.cosmogonyPath }}/cosmogony-data/concat/cosmogony.jsonl.gz cosmogony.jsonl.gz
         echo "Finished"
     outputs:
       artifacts:
@@ -44,7 +44,7 @@ spec:
       image: {{ .Values.cosmogony_explorer_importer.image.repository }}
       imagePullPolicy: {{ .Values.cosmogony_explorer_importer.image.imagePullPolicy }}
       command: ["python"]
-      args: ["import.py", "import-data", "/mnt/data/cosmogony.jsonl.gz", "true"]
+      args: ["import.py", "import-data", "/mnt/data/cosmogony.jsonl.gz"]
       env:
       - name: POSTGRES_HOST
         value: {{ .Values.postgres.host }}

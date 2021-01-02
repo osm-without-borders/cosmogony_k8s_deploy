@@ -29,15 +29,27 @@ cosmogony_explorer_api:
 
 namespace: cosmogony
 
+osmSources:
+  - "http://download.geofabrik.de/europe-latest.osm.pbf"
+  - "http://download.geofabrik.de/africa-latest.osm.pbf"
+  - "http://download.geofabrik.de/antarctica-latest.osm.pbf"
+  - "http://download.geofabrik.de/asia-latest.osm.pbf"
+  - "http://download.geofabrik.de/australia-oceania-latest.osm.pbf"
+  - "http://download.geofabrik.de/central-america-latest.osm.pbf"
+  - "http://download.geofabrik.de/north-america-latest.osm.pbf"
+  - "http://download.geofabrik.de/south-america-latest.osm.pbf"
+
 persistantVolumes:
   stats: /var/data/cosmogony/stats
   tilesCache: /var/data/cosmogony/trex
 
 minio:
-  host: http://minio.default.svc.cluster.local:9000
+  endpoint: minio.default.svc.cluster.local:9000
+  scheme: http
   accessKey: minioaccess
   secretKey: miniosecret
-  cosmogonyPath: /cosmogony
+  cosmogonyPath: cosmogony # be carefull not to include the `/` first character
+  artifactsPath: artifacts
 
 postgres:
   host: postgres-postgresql.default
@@ -50,9 +62,11 @@ ingress:
   enabled: false
   class: nginx
   hosts:
-    - host: cosmogony.local
-      serviceName: cosmogony-web
-      servicePort: 80
+    - host: "cosmogony.local"
+      paths:
+        - path: "/"
+          serviceName: cosmogony-web
+          servicePort: 80
 
 nodeSelector: {}
 

@@ -102,11 +102,11 @@ spec:
       source: |
         file={{ "{{" }}inputs.parameters.file{{ "}}" }}
         echo "Processing ${file}"
-        /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
+        /usr/bin/mc config host add myminio {{ .Values.minio.scheme }}://{{ .Values.minio.endpoint }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
         filename="${file##*/}"
         echo "Getting $filename.jsonl.gz from minio"
-        mc cp myminio{{ .Values.minio.cosmogonyPath }}/osm/$filename osm.pbf
+        mc cp myminio/{{ .Values.minio.cosmogonyPath }}/osm/$filename osm.pbf
         echo "Finished"
   - name: step2
     inputs:
@@ -137,10 +137,10 @@ spec:
       command: ["/bin/sh"]
       source: |
         file={{ "{{" }}inputs.parameters.file{{ "}}" }}
-        /usr/bin/mc config host add myminio {{ .Values.minio.host }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
+        /usr/bin/mc config host add myminio {{ .Values.minio.scheme }}://{{ .Values.minio.endpoint }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         cd /
         filename="${file##*/}"
         echo "Saving $filename.jsonl.gz to minio"
-        mc cp cosmo.jsonl.gz myminio{{ .Values.minio.cosmogonyPath }}/cosmogony-data/$filename.jsonl.gz
+        mc cp cosmo.jsonl.gz myminio/{{ .Values.minio.cosmogonyPath }}/cosmogony-data/parts/$filename.jsonl.gz
         echo "Finished"
 
