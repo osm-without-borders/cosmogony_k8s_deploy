@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: cosmogony-data-update-
+  namespace: cosmogony
+spec:
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  entrypoint: cosmogony-data-update
+  templates:
+  - name: cosmogony-data-update
+    steps:
+      - - name: argo1
+          templateRef:
+            name: argo1-get-osm-parts-wft
+            template: import-osm
+      - - name: argo2
+          templateRef:
+            name: argo2-osm2cosmo-parts-wft
+            template: loop-param-arg-example
+      - - name: argo3
+          templateRef:
+            name: argo3-cosmo-aggregate-wft
+            template: aggregate-pipeline
+      - - name: argo4
+          templateRef:
+            name: argo4-db-import-wft
+            template: get-cosmo
+      - - name: argo5
+          templateRef:
+            name: argo5-compute-stats-wft
+            template: get-cosmo
+      - - name: argo6
+          templateRef:
+            name: argo6-update-tiles
+            template: update-tiles
+    archiveLocation:
+      archiveLogs: true
+

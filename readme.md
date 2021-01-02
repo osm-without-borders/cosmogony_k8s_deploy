@@ -33,6 +33,9 @@ Next install everything using the helm chart:
 
 Be carefull, PersistentVolumes are created as part of the deployment.
 
+You can run a data update by modifying ./argo_workflow.yml and running:
+argo submit argo_workflow.yml
+
 ## Desciption of the parts
 
 ### Data processing
