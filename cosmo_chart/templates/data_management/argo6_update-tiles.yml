@@ -17,6 +17,8 @@ spec:
         template: generate-tiles-tpl
     - - name: rotate-tmp
         template: rotate-tmp-tpl
+    - - name: restart-tiles-pods
+        template: restart-tiles-pods
   - name: empty-tmp-tpl
     volumes:
     - name: tiles-vol
@@ -30,7 +32,7 @@ spec:
       command: ["/bin/sh"]
       source: |
         rm -rf /mnt/trex/preparing
-        mkdir /mnt/trex/serving
+        mkdir /mnt/trex/preparing
   - name: generate-tiles-tpl
     volumes:
     - name: tiles-vol
@@ -40,7 +42,7 @@ spec:
       image: {{ .Values.cosmogony_explorer_tiles.image.repository }}
       imagePullPolicy: {{ .Values.cosmogony_explorer_tiles.image.imagePullPolicy }}
       command: ["/usr/bin/t_rex"]
-      args: ["generate", "--minzoom", "0", "--maxzoom", "1", "--config", "/config_server.toml"]
+      args: ["generate", "--minzoom", "0", "--maxzoom", "4", "--config", "/config_server.toml"]
       volumeMounts:
         - mountPath: /tmp/mvtcache
           name: tiles-vol
@@ -60,5 +62,12 @@ spec:
         rm -rf /mnt/trex/backup
         mv /mnt/trex/serving /mnt/trex/backup
         mv /mnt/trex/preparing /mnt/trex/serving
+  - name: restart-tiles-pods
+    script:
+      image: bitnami/kubectl
+      command: ["/bin/sh"]
+      source: |
+        kubectl scale deployments/cosmogony-trex --replicas=0
+        kubectl scale deployments/cosmogony-trex --replicas=1
 
 
