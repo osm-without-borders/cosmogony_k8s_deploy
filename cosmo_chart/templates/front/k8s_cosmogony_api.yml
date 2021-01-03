@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cosmogony-api
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
   labels:
     app: cosmogony-api
 spec:
@@ -17,29 +17,29 @@ spec:
     spec:
       containers:
       - name: cosmogony-api
-        image: my-local-registry.url/namespace/cosmogony_explorer_api
-        imagePullPolicy: Always
+        image: {{ .Values.cosmogony_explorer_api.image.repository }}
+        imagePullPolicy: {{ .Values.cosmogony_explorer_api.image.pullPolicy}}
         env:
         - name: POSTGRES_HOST
-          value: postgres-postgresql.default
+          value: {{ .Values.postgres.host }}
         - name: POSTGRES_PORT
-          value: "5432"
+          value: {{ .Values.postgres.port }}
         - name: POSTGRES_DB
-          value: cosmogony
+          value: {{ .Values.postgres.db }}
         - name: POSTGRES_USER
-          value: cosmogony
+          value: {{ .Values.postgres.user }}
         - name: POSTGRES_PASSWORD
-          value: cosmogony
+          value: {{ .Values.postgres.password }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: cosmogony-api
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
   labels:
     app: cosmogony-api
 spec:
-  type: NodePort
+  type: {{ .Values.cosmogony_explorer_tiles.service.type }}
   ports:
   - port: 8000
     targetPort: 8000

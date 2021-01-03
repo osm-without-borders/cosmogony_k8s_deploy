@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: argo1-get-osm-parts-wft
-  namespace: cosmogony
+  namespace: {{ .Values.namespace }}
 spec:
   entrypoint: import-osm
   artifactRepositoryRef:
@@ -27,22 +27,13 @@ spec:
       source: |
         echo "--== Start of the collection ==--"
         cd /
-        /usr/bin/mc config host add myminio http://minio.default.svc.cluster.local:9000 minioaccess miniosecret
+        /usr/bin/mc config host add myminio {{ .Values.minio.scheme }}://{{ .Values.minio.endpoint }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
         for myfile in $(cat /mnt/osm-sources/step1-osm-dl)
         do
           filename="${myfile##*/}"
           echo $filename;
-          wget --tries=5 $myfile
-          mc cp $filename myminio/cosmogony/osm/$filename
+          # wget --tries=5 $myfile
+          curl -o $filename $myfile
+          mc cp $filename myminio/{{ .Values.minio.cosmogonyPath }}/osm/$filename
         done;
-        echo "Finished"
----
-apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-metadata:
-  name: argo1-get-osm-parts-wf
-  namespace: cosmogony
-spec:
-  workflowTemplateRef:
-    name: argo1-get-osm-parts-wft
 

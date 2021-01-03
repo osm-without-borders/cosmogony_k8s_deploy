@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosmogony-trex
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cosmogony-trex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosmogony-trex
+  template:
+    metadata:
+      labels:
+        app: cosmogony-trex
+    spec:
+      volumes:
+      - name: tiles-vol
+        persistentVolumeClaim:
+          claimName: trex-pvc
+      containers:
+      - name: cosmogony-trex
+        image: {{ .Values.cosmogony_explorer_tiles.image.repository }}
+        imagePullPolicy: {{ .Values.cosmogony_explorer_tiles.image.pullPolicy}}
+        volumeMounts:
+          - mountPath: /tmp/mvtcache
+            name: tiles-vol
+            subPath: serving
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cosmogony-trex
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cosmogony-trex
+spec:
+  type: {{ .Values.cosmogony_explorer_tiles.service.type }}
+  ports:
+  - port: 6767
+    targetPort: 6767
+  selector:
+    app: cosmogony-trex

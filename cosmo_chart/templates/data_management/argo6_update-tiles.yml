@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: argo6-update-tiles
+  namespace: {{ .Values.namespace }}
+spec:
+  entrypoint: update-tiles
+  artifactRepositoryRef:
+    configMap: cosmogony-artifact-repository
+    key: minio
+  templates:
+  - name: update-tiles
+    steps:
+    - - name: empty-tmp
+        template: empty-tmp-tpl
+    - - name: generate-tiles
+        template: generate-tiles-tpl
+    - - name: rotate-tmp
+        template: rotate-tmp-tpl
+    - - name: restart-tiles-pods
+        template: restart-tiles-pods
+  - name: empty-tmp-tpl
+    volumes:
+    - name: tiles-vol
+      persistentVolumeClaim:
+        claimName: trex-pvc
+    script:
+      image: alpine:3.6
+      volumeMounts:
+        - mountPath: /mnt/trex
+          name: tiles-vol
+      command: ["/bin/sh"]
+      source: |
+        rm -rf /mnt/trex/preparing
+        mkdir /mnt/trex/preparing
+  - name: generate-tiles-tpl
+    volumes:
+    - name: tiles-vol
+      persistentVolumeClaim:
+        claimName: trex-pvc
+    container:
+      image: {{ .Values.cosmogony_explorer_tiles.image.repository }}
+      imagePullPolicy: {{ .Values.cosmogony_explorer_tiles.image.imagePullPolicy }}
+      command: ["/usr/bin/t_rex"]
+      args: ["generate", "--minzoom", "0", "--maxzoom", "4", "--config", "/config_server.toml"]
+      volumeMounts:
+        - mountPath: /tmp/mvtcache
+          name: tiles-vol
+          subPath: preparing
+  - name: rotate-tmp-tpl
+    volumes:
+    - name: tiles-vol
+      persistentVolumeClaim:
+        claimName: trex-pvc
+    script:
+      image: alpine:3.6
+      volumeMounts:
+        - mountPath: /mnt/trex
+          name: tiles-vol
+      command: ["/bin/sh"]
+      source: |
+        rm -rf /mnt/trex/backup
+        mv /mnt/trex/serving /mnt/trex/backup
+        mv /mnt/trex/preparing /mnt/trex/serving
+  - name: restart-tiles-pods
+    script:
+      image: bitnami/kubectl
+      command: ["/bin/sh"]
+      source: |
+        kubectl scale deployments/cosmogony-trex --replicas=0
+        kubectl scale deployments/cosmogony-trex --replicas=1
+
+

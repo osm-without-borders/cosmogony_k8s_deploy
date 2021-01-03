@@ -1,0 +1,11 @@
+apiVersion: v2
+name: cosmo_chart
+description: Cosmogony Heml chart
+
+type: application
+
+# Chart version
+version: 0.0.1
+
+# Cosmogony version
+appVersion: 0.9.0

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: osm-sources
+  namespace: {{ .Values.namespace }}
+data:
+  step1-osm-dl: |
+    {{- range .Values.osmSources }} {{ . | nindent 4 }} {{- end }}
+  step2-cosmogony-convert: |
+    {{- range .Values.osmSources }} {{ . | nindent 4 }} {{- end }}
+  step3-cosmogony-concat: |
+    {{- range .Values.osmSources }} {{ . | nindent 4 }} {{- end }}
